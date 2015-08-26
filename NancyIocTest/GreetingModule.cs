@@ -9,17 +9,19 @@ namespace NancyIocTest
 
     public class GreetingMessageService : IGreetingMessageService
     {
+        private readonly IRequestUrl _requestUrl;
         private static int _count = 0;
-        private readonly string _message;
+        private readonly int _countInstance;
 
-        public GreetingMessageService()
+        public GreetingMessageService(IRequestUrl requestUrl)
         {
-            _message = "Hi from GreetingMessageService " + _count++;
+            _requestUrl = requestUrl;
+            _countInstance = _count++;
         }
 
         public string GetMessage()
         {
-            return _message;
+            return "Hi from GreetingMessageService " + _countInstance + " with url " + _requestUrl.Url;
         }
     }
 
@@ -44,6 +46,23 @@ namespace NancyIocTest
         {
             return _message + "<br>" + _service.GetMessage();
         }
+    }
+
+    public interface IRequestUrl
+    {
+        Url Url { get; }
+    }
+
+    public class RequestUrl : IRequestUrl
+    {
+        private readonly NancyContext _context;
+
+        public RequestUrl(NancyContext context)
+        {
+            _context = context;
+        }
+
+        public Url Url { get { return _context.Request.Url; }}
     }
 
     public class GreetingsModule : NancyModule

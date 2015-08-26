@@ -7,9 +7,12 @@ namespace NancyIocTest
     {
         protected override void ConfigureRequestContainer(TinyIoCContainer container, NancyContext context)
         {
-            container.Register<IGreeter, Greeter>();
             base.ConfigureRequestContainer(container, context);
-            //container.Register<IGreetingMessageService, GreetingMessageService>();
+            //container.Register<IRequestUrl>((cContainer, overloads) => new RequestUrl(context));
+            container.Register<NancyContext>((cContainer, overloads) => context);
+            container.Register<IRequestUrl, RequestUrl>();
+            container.Register<IGreeter, Greeter>();
+            container.Register<IGreetingMessageService, GreetingMessageService>();
         }
     }
 }
