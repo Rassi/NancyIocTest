@@ -9,19 +9,27 @@ namespace NancyIocTest
 
     public class GreetingMessageService : IGreetingMessageService
     {
-        private readonly IRequestUrl _requestUrl;
+        private readonly IRequestUrl2 _requestUrl;
+        private readonly ITestUrl _testUrl;
         private static int _count = 0;
         private readonly int _countInstance;
 
-        public GreetingMessageService(IRequestUrl requestUrl)
+        public GreetingMessageService(IRequestUrl2 requestUrl, ITestUrl testUrl)
         {
             _requestUrl = requestUrl;
+            _testUrl = testUrl;
             _countInstance = _count++;
         }
 
         public string GetMessage()
         {
-            return "Hi from GreetingMessageService " + _countInstance + " with url " + _requestUrl.Url;
+            return "Hi from GreetingMessageService " + _countInstance + GetUrl();
+        }
+
+        private string GetUrl()
+        {
+            return " with url " + (_testUrl.Context.Request.Url == null ? "null" : _testUrl.Context.Request.Url.ToString());
+            //return " with url " + (_requestUrl.Url == null ? "null" : _requestUrl.Url.ToString());
         }
     }
 
@@ -48,28 +56,62 @@ namespace NancyIocTest
         }
     }
 
-    public interface IRequestUrl
+    public interface IRequestUrl2
     {
+        NancyContext Context { get; set; }
         Url Url { get; }
     }
 
-    public class RequestUrl : IRequestUrl
+    public class RequestUrl2 : IRequestUrl2
     {
-        private readonly NancyContext _context;
-
-        public RequestUrl(NancyContext context)
+        public RequestUrl2()
         {
-            _context = context;
         }
 
-        public Url Url { get { return _context.Request.Url; }}
+        public NancyContext Context { get; set; }
+        public Url Url { get { return Context.Request == null ? null : Context.Request.Url; }}
     }
+
+    public interface ITestUrl
+    {
+        string TestMethod();
+        NancyContext Context { get; set; }
+    }
+
+    public class TestUrl : ITestUrl
+    {
+        public TestUrl()
+        {
+            
+        }
+
+        public string TestMethod()
+        {
+            return "test";
+        }
+
+        public NancyContext Context { get; set; }
+    }
+
+    //public class ModuleBase : NancyModule
+    //{
+    //    public ModuleBase(IRequestUrl2 requestUrl)
+    //    {
+    //        requestUrl.Context = Context;
+    //    }
+    //}
 
     public class GreetingsModule : NancyModule
     {
-        public GreetingsModule(IGreeter greeter)
+        public GreetingsModule(IRequestUrl2 requestUrl, IGreeter greeter, ITestUrl testUrl)// : base(requestUrl)
         {
-            Get["/"] = x => greeter.Greet();
+            Get["/"] = x =>
+            {
+                //testUrl.TestMethod();
+                //requestUrl.Context = Context;
+                //testUrl.Context = Context;
+                return greeter.Greet();
+            };
         }
     }
 }
