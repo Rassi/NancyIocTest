@@ -1,50 +1,9 @@
 ﻿using Nancy;
+using NancyIocTest.Application;
 
-namespace NancyIocTest
+namespace NancyIocTest.Web
 {
-    public interface IGreetingMessageService
-    {
-        string GetMessage(GreetingCommand command);
-    }
-
-    public class GreetingMessageService : IGreetingMessageService
-    {
-        private static int _count = 0;
-        private readonly int _countInstance;
-
-        public GreetingMessageService()
-        {
-            _countInstance = _count++;
-        }
-
-        public string GetMessage(GreetingCommand command)
-        {
-            return "Hi from GreetingMessageService " + _countInstance + " with url " + command.SourceUrl;
-        }
-    }
-
-    public interface IGreeter
-    {
-        string Greet(GreetingCommand command);
-    }
-
-    public class Greeter : IGreeter
-    {
-        private readonly IGreetingMessageService _service;
-        private readonly string _message;
-        private static int _count = 0;
-
-        public Greeter(IGreetingMessageService service)
-        {
-            _service = service;
-            _message = "Hi from Greeter " + _count++;
-        }
-
-        public string Greet(GreetingCommand command)
-        {
-            return _message + "<br>" + _service.GetMessage(command);
-        }
-    }
+    //In a real app this would be in it's own web project and would reference Nancy
 
     public class GreetingsModule : NancyModule
     {
@@ -63,6 +22,11 @@ namespace NancyIocTest
 
             //in a real app I would likely automap from the command to some internal model
             //I would not want to leak my public web contract (GreetingCommnad) into my application layer
+
+            //IMO moving data to and from HTTP format in the module does a lot for SRP and OCP
+            //access headers/urls/query params etc. throughout the application code means
+            //your application code needs to understand your HTTP/Web formats and needs to change
+            //when details of your HTTP/Web interface change
 
             return _greeter.Greet(command); 
         }
