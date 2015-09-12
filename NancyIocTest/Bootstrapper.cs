@@ -10,7 +10,6 @@ namespace NancyIocTest
             base.ConfigureRequestContainer(container, context);
             //container.Register<IRequestUrl>((cContainer, overloads) => new RequestUrl(context));
             container.Register<NancyContext>((cContainer, overloads) => context);
-            container.Register<IRequestUrl, RequestUrl>();
             container.Register<IGreeter, Greeter>();
             container.Register<IGreetingMessageService, GreetingMessageService>();
         }
