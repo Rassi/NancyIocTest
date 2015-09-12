@@ -1,75 +1,39 @@
 ﻿using Nancy;
+using NancyIocTest.Application;
 
-namespace NancyIocTest
+namespace NancyIocTest.Web
 {
-    public interface IGreetingMessageService
-    {
-        string GetMessage();
-    }
-
-    public class GreetingMessageService : IGreetingMessageService
-    {
-        private readonly IRequestUrl _requestUrl;
-        private static int _count = 0;
-        private readonly int _countInstance;
-
-        public GreetingMessageService(IRequestUrl requestUrl)
-        {
-            _requestUrl = requestUrl;
-            _countInstance = _count++;
-        }
-
-        public string GetMessage()
-        {
-            return "Hi from GreetingMessageService " + _countInstance + " with url " + _requestUrl.Url;
-        }
-    }
-
-    public interface IGreeter
-    {
-        string Greet();
-    }
-
-    public class Greeter : IGreeter
-    {
-        private readonly IGreetingMessageService _service;
-        private readonly string _message;
-        private static int _count = 0;
-
-        public Greeter(IGreetingMessageService service)
-        {
-            _service = service;
-            _message = "Hi from Greeter " + _count++;
-        }
-
-        public string Greet()
-        {
-            return _message + "<br>" + _service.GetMessage();
-        }
-    }
-
-    public interface IRequestUrl
-    {
-        Url Url { get; }
-    }
-
-    public class RequestUrl : IRequestUrl
-    {
-        private readonly NancyContext _context;
-
-        public RequestUrl(NancyContext context)
-        {
-            _context = context;
-        }
-
-        public Url Url { get { return _context.Request.Url; }}
-    }
+    //In a real app this would be in it's own web project and would reference Nancy
 
     public class GreetingsModule : NancyModule
     {
+        private readonly IGreeter _greeter;
+
         public GreetingsModule(IGreeter greeter)
         {
-            Get["/"] = x => greeter.Greet();
+            _greeter = greeter;
+            Get["/"] = x => Greet();
         }
+
+        private string Greet()
+        {
+            //in a real app this would likely be a this.BindAndValidate<GreetingCommand> call
+            var command = new GreetingCommand { SourceUrl = Request.Url };
+
+            //in a real app I would likely automap from the command to some internal model
+            //I would not want to leak my public web contract (GreetingCommnad) into my application layer
+
+            //IMO moving data to and from HTTP format in the module does a lot for SRP and OCP
+            //access headers/urls/query params etc. throughout the application code means
+            //your application code needs to understand your HTTP/Web formats and needs to change
+            //when details of your HTTP/Web interface change
+
+            return _greeter.Greet(command); 
+        }
+    }
+
+    public class GreetingCommand
+    {
+        public Url SourceUrl { get; set; }
     }
 }
