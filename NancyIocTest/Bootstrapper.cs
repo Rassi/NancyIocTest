@@ -36,7 +36,7 @@ namespace NancyIocTest
             foreach (var assemblyClass in assemblyClasses)
             {
                 var classInterfaceName = string.Format("I{0}", assemblyClass.Name);
-                var interfaceMatch = assemblyClass.GetInterfaces().FirstOrDefault(type => type.Name.Equals(classInterfaceName));
+                var interfaceMatch = assemblyClass.GetInterfaces().SingleOrDefault(type => type.Name.Equals(classInterfaceName));
                 if (null == interfaceMatch)
                 {
                     continue;
