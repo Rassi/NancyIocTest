@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Nancy;
@@ -12,16 +13,36 @@ namespace NancyIocTest
     {
         protected override void ConfigureApplicationContainer(TinyIoCContainer container)
         {
-            base.ConfigureApplicationContainer(container);
+            //base.ConfigureApplicationContainer(container);
             //var allInterfaces = AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes().Where(type => type.IsInterface));
-            var assemblyClasses = Assembly.GetExecutingAssembly().GetTypes().Where(type => type.IsClass);
+
+            // TODO: Get by assembly name
+            //var assemblyClasses = Assembly.GetExecutingAssembly().GetTypes().Where(type => type.IsClass);
+            var nancyioctestDll = "NancyIocTest.dll";
+            RegisterFileInContainer(container, nancyioctestDll);
+        }
+
+        private static void RegisterFileInContainer(TinyIoCContainer container, string filename)
+        {
+            var currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            if (null == currentDirectory)
+            {
+                throw new Exception("Couldn't get current directory");
+            }
+
+            var fullPath = Path.Combine(currentDirectory, filename);
+            var assembly = Assembly.LoadFrom(fullPath);
+            var assemblyClasses = assembly.GetTypes().Where(type => type.IsClass);
             foreach (var assemblyClass in assemblyClasses)
             {
-                var interfaces = assemblyClass.GetInterfaces();
-                if (interfaces.Count() == 1)
+                var classInterfaceName = string.Format("I{0}", assemblyClass.Name);
+                var interfaceMatch = assemblyClass.GetInterfaces().FirstOrDefault(type => type.Name.Equals(classInterfaceName));
+                if (null == interfaceMatch)
                 {
-                    container.Register(interfaces[0], assemblyClass).AsPerRequestSingleton();
+                    continue;
                 }
+
+                container.Register(interfaceMatch, assemblyClass).AsPerRequestSingleton();
             }
         }
 
